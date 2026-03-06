@@ -1,0 +1,42 @@
+---
+
+- name: This file is to deploy a simple html into target servers dynamically
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+        cache_valid_time: 3600 
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Install git
+      apt:
+        name: git
+        state: present
+
+    - name: clone git repo
+      git:
+        repo: "https://github.com/NakshatraGowda/ansible.git"
+        dest: /var/www/myapp
+
+    - name: deploy nginx config file
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-enabled/default
+      notify: Restart nginx
+
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
